@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Module 01 — Site A (the app)</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 780px; margin: 40px auto; padding: 0 20px; line-height: 1.5; color: #1a1a1a; }
+  h1 { border-bottom: 3px solid #222; padding-bottom: 8px; }
+  button { font-size: 1rem; padding: 8px 16px; margin: 6px 8px 6px 0; cursor: pointer; }
+  pre { background: #111; color: #7CFC00; padding: 14px; border-radius: 6px; overflow-x: auto; min-height: 3em; }
+  .label { font-weight: bold; margin-top: 18px; }
+  .hint { background: #fff8e1; border-left: 4px solid #f5a623; padding: 10px 14px; margin: 16px 0; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; }
+  nav a { margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/tutorial">Tutorial</a>
+  <a href="/devtools-guide">DevTools Guide</a>
+</nav>
+
+<h1>Site A — "the app you're logged into"</h1>
+<p>
+  You're viewing this page from <code>http://127.0.0.1:5000</code>.
+  There's a second, unrelated-looking site running at
+  <code>http://127.0.0.1:5001</code> (Site B). Same machine, same browser,
+  but as far as the browser's security model is concerned, they are
+  <strong>different origins</strong> — because the port differs.
+</p>
+
+<p class="label">Step 1 — open DevTools now.</p>
+<p>Press <code>F12</code> (or <code>Ctrl+Shift+I</code>) and click the
+   <strong>Console</strong> tab. Leave it open for the rest of this page.</p>
+
+<p class="label">Step 2 — fetch Site A's own data (same-origin):</p>
+<button id="btn-same">fetch('/secret')  — same origin</button>
+<pre id="out-same">(click the button)</pre>
+
+<p class="label">Step 3 — fetch Site B's data from here (cross-origin):</p>
+<button id="btn-cross">fetch('http://127.0.0.1:5001/secret')  — cross origin</button>
+<pre id="out-cross">(click the button)</pre>
+
+<div class="hint">
+  <strong>What you should see:</strong> the same-origin fetch succeeds and
+  prints JSON. The cross-origin fetch throws — check the <strong>Console</strong>
+  for a message containing <code>blocked by CORS policy</code>, and check the
+  <strong>Network</strong> tab: the request to :5001 shows status, but the
+  browser still refuses to hand the response body to your JavaScript.
+  That refusal, happening entirely on your own machine, IS the Same-Origin
+  Policy. It's a browser-side rule, not a server-side one — Site B's server
+  answered just fine, your own browser is the one keeping the answer from you.
+</div>
+
+<p class="label">Step 4 — now open Site B directly:</p>
+<p><a href="http://127.0.0.1:5001/" target="_blank">http://127.0.0.1:5001/</a>
+   — a normal page load like this always works. SOP restricts what
+   <em>script</em> can read across origins, not whether you can navigate there.</p>
+
+<script>
+document.getElementById('btn-same').addEventListener('click', async () => {
+  const out = document.getElementById('out-same');
+  try {
+    const res = await fetch('/secret');
+    const data = await res.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    out.textContent = 'Error: ' + e;
+  }
+});
+
+document.getElementById('btn-cross').addEventListener('click', async () => {
+  const out = document.getElementById('out-cross');
+  try {
+    const res = await fetch('http://127.0.0.1:5001/secret');
+    const data = await res.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    out.textContent = 'Blocked. Browser threw: ' + e + '\n\nThis is expected — see the Console for the full CORS error, and the Network tab to see the request actually went out.';
+  }
+});
+</script>
+
+</body>
+</html>

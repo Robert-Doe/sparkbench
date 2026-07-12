@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DevTools as a Weapon</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 820px; margin: 40px auto; padding: 0 20px; line-height: 1.55; color: #1a1a1a; }
+  h1 { border-bottom: 3px solid #222; padding-bottom: 8px; }
+  h2 { margin-top: 40px; border-left: 5px solid #444; padding-left: 10px; }
+  code, pre { font-family: "SFMono-Regular", Consolas, monospace; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #111; color: #d4d4d4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  .attacker { background: #fdecec; border-left: 4px solid #c0392b; padding: 10px 14px; margin: 14px 0; }
+  .try { background: #eaf6ea; border-left: 4px solid #27ae60; padding: 10px 14px; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+  td, th { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; }
+  nav a { margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<nav><a href="/">Site A</a> <a href="/tutorial">Tutorial</a></nav>
+
+<h1>DevTools as a Weapon</h1>
+<p>
+  Every browser ships an attack console for free. Right-click almost anything
+  and choose <strong>Inspect</strong>, or press <code>F12</code>. Five panels
+  matter for XSS work. Learn what each one reveals before you write a single
+  payload — half of finding an XSS bug is reading what the page is already
+  telling you.
+</p>
+
+<h2>1. Elements — the live, rendered DOM</h2>
+<p>
+  This is <em>not</em> "view source." View-source shows the HTML the server
+  sent. Elements shows the DOM <em>after</em> the browser's parser and any
+  JavaScript have finished mutating it — which is what actually executes.
+  A payload can be invisible in view-source (because JS injected it after
+  load) and fully present here.
+</p>
+<div class="attacker">
+  <strong>Attacker use:</strong> double-click any element's text or attribute
+  to edit it live. This only affects your own local view (nothing is sent to
+  the server) — but it's exactly how you prototype "if I could get my string
+  into this attribute, would it execute?" before you find the real injection
+  point.
+</div>
+<div class="try">
+  <strong>Try it:</strong> go to Site A, open Elements, find the
+  <code>&lt;button id="btn-same"&gt;</code> element, double-click its text,
+  and change it. Nothing breaks, nothing is saved — it's your sandbox.
+</div>
+
+<h2>2. Console — arbitrary JavaScript, in the page's own context</h2>
+<p>
+  Anything you type into Console runs with the exact same privileges as the
+  page's own scripts: same cookies (except <code>HttpOnly</code> ones — more
+  in Module 15), same <code>localStorage</code>, same ability to make
+  requests as "you."
+</p>
+<div class="try">
+<strong>Try these on Site A's console right now:</strong>
+<pre>document.domain
+document.cookie
+window.location.origin
+document.querySelectorAll('script').length</pre>
+</div>
+<div class="attacker">
+  <strong>Attacker use:</strong> this is your payload-development REPL. Before
+  you ever inject a string into a real form field, you write and test the
+  exact JavaScript here. <code>alert(1)</code> is the traditional "proof it
+  runs" payload precisely because it's unmistakable and harmless — you'll use
+  it constantly through this course.
+</div>
+
+<h2>3. Network — every request, every header, every byte</h2>
+<p>
+  Reload Site A with Network open (checkbox "Preserve log" is useful) and
+  click on the page's own request. Look at:
+</p>
+<table>
+<tr><th>What to check</th><th>Why it matters for XSS</th></tr>
+<tr><td><code>Content-Type</code> response header</td><td>If it's not <code>text/html</code>, browsers generally won't execute script even if HTML is in the body — this is why servers sometimes set this deliberately as a defense.</td></tr>
+<tr><td><code>Content-Security-Policy</code> header</td><td>Tells you upfront which of the 5 execution mechanisms (Module 03) are even allowed to fire. You'll read these constantly from Module 17 onward.</td></tr>
+<tr><td><code>Set-Cookie</code> flags (<code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code>)</td><td><code>HttpOnly</code> means JS — including your injected payload — cannot read that cookie via <code>document.cookie</code>. It changes what an XSS bug can actually steal.</td></tr>
+<tr><td>Response body of a failed cross-origin fetch</td><td>The request often still fires and the server still answers — Network shows you the real response even when SOP hides it from your JavaScript. This gap (network-level visibility vs. script-level visibility) matters throughout the course.</td></tr>
+</table>
+
+<h2>4. Application — storage, cookies, service workers</h2>
+<p>
+  Application → Storage shows <code>Cookies</code>, <code>Local Storage</code>,
+  <code>Session Storage</code> for the current origin, scoped exactly the way
+  your JavaScript is scoped. If your own script can't read a cookie here
+  because it's <code>HttpOnly</code>, an XSS payload running as that script
+  can't either — this panel tells you the ceiling of what a stolen-cookie
+  attack can achieve before you even try it (Module 15).
+</p>
+
+<h2>5. Sources — breakpoints inside someone else's JavaScript</h2>
+<p>
+  Set a breakpoint, and step through code line by line, inspecting variables
+  as they're assigned. This is how you find DOM XSS sinks (Module 09) in
+  real applications: you don't guess where <code>innerHTML</code> is being
+  set with attacker data — you put a breakpoint on the property and watch
+  the call stack tell you.
+</p>
+<div class="try">
+  <strong>Try it later (Module 09):</strong> in Chrome, Sources → right side
+  panel → <em>Event Listener Breakpoints</em> → expand <em>DOM Mutation</em>
+  and check the boxes. Now any script that mutates the DOM will pause
+  execution right there.
+</div>
+
+<h2>Self-check before Module 02</h2>
+<ul>
+  <li>Can you explain, in one sentence, why <code>http://127.0.0.1:5000</code> and <code>http://127.0.0.1:5001</code> are different origins but <code>http://127.0.0.1:5000/</code> and <code>http://127.0.0.1:5000/tutorial</code> are not?</li>
+  <li>Can you find, without help, whether Site A sets any cookies at all right now? (Trick question worth checking — it currently doesn't. You'll add a session cookie in Module 15.)</li>
+</ul>
+
+</body>
+</html>

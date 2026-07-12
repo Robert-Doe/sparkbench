@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Module 01 Tutorial</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
+  h1 { border-bottom: 3px solid #222; padding-bottom: 8px; }
+  h2 { margin-top: 36px; }
+  pre { background: #111; color: #d4d4d4; padding: 14px; border-radius: 6px; overflow-x: auto; }
+  .expect { background: #eaf6ea; border-left: 4px solid #27ae60; padding: 10px 14px; margin: 14px 0; }
+  .note { background: #fff8e1; border-left: 4px solid #f5a623; padding: 10px 14px; margin: 14px 0; }
+  code { background: #eee; padding: 1px 5px; border-radius: 3px; }
+  nav a { margin-right: 16px; }
+  ol > li { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<nav><a href="/">Site A</a> <a href="/devtools-guide">DevTools Guide</a></nav>
+
+<h1>Module 01 — Tutorial</h1>
+<p>Goal: get the lab running, prove the Same-Origin Policy to yourself with
+your own eyes, and get comfortable in DevTools before Module 02 starts
+breaking the HTML parser on purpose.</p>
+
+<h2>Step 1 — Python environment</h2>
+<p>You need Python 3.9+ on your machine. Check:</p>
+<pre>python --version</pre>
+<p>Create an isolated environment inside this module's folder so course
+dependencies never touch your system Python:</p>
+<pre># Windows (PowerShell or cmd)
+cd module-01-environment-setup
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+# macOS/Linux
+cd module-01-environment-setup
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt</pre>
+<div class="expect"><strong>Expected output:</strong> pip reports
+<code>Successfully installed flask-3.0.3 ...</code> (plus Flask's own
+dependencies: Werkzeug, Jinja2, click, itsdangerous, blinker).</div>
+
+<h2>Step 2 — run the lab</h2>
+<pre>python lab_server.py</pre>
+<div class="expect"><strong>Expected output:</strong>
+<pre>================================================================
+ Module 01 lab is up.
+ Site A (main app) : http://127.0.0.1:5000
+ Site B (other origin) : http://127.0.0.1:5001
+ Open Site A in your browser and follow /tutorial
+================================================================
+ * Serving Flask app 'site_a'
+ * Running on http://127.0.0.1:5000</pre>
+If you instead see <code>OSError: [Errno 98] Address already in use</code>,
+something else on your machine is already listening on 5000 or 5001 — close
+it, or edit the ports in <code>lab_server.py</code>.
+</div>
+
+<h2>Step 3 — the same-origin / cross-origin experiment</h2>
+<ol>
+  <li>Open <code>http://127.0.0.1:5000</code> in your browser.</li>
+  <li>Open DevTools (<code>F12</code>), Console tab.</li>
+  <li>Click <strong>fetch('/secret') — same origin</strong>. You should see
+      JSON with a <code>balance</code> field print into the black box on
+      the page.</li>
+  <li>Click <strong>fetch('http://127.0.0.1:5001/secret') — cross origin</strong>.
+      You should see an error message on the page, and in the Console a red
+      error mentioning <code>CORS</code> or
+      <code>Access-Control-Allow-Origin</code>.</li>
+  <li>Switch to the Network tab, click the request row for
+      <code>secret</code> that went to port 5001. Look at its
+      <strong>Response</strong> sub-tab — the server's actual JSON is sitting
+      right there, fully delivered over the network. Your JavaScript still
+      isn't allowed to touch it. That gap between "the bytes arrived" and
+      "your script can read them" IS the Same-Origin Policy — a browser-side
+      rule enforced after the network layer, not a server-side one.</li>
+</ol>
+
+<h2>Step 4 — read the response headers</h2>
+<p>Still in Network, click the request to <code>127.0.0.1:5000/secret</code>
+and look at Response Headers. Note there's no
+<code>Access-Control-Allow-Origin</code> header — Site A never granted
+permission for cross-origin script reads, so by default, none exist. This
+default-deny is the whole security model. (CORS is the mechanism a server
+uses to <em>opt in</em> to allowing specific cross-origin reads — you'll see
+that used, and abused, in later modules.)</p>
+
+<h2>Exercises before Module 02</h2>
+<ol>
+  <li><strong>Change the port</strong> of Site B in <code>lab_server.py</code>
+      to <code>5000</code> (same as Site A) temporarily, restart, and try to
+      run both — what happens, and why does that prove ports alone define
+      origin distinctness?</li>
+  <li><strong>Add a third route</strong> to Site A, <code>/whoami</code>,
+      that returns <code>jsonify({"origin": request.host_url})</code>. Hit it
+      from the browser address bar directly, then fetch it from Site B's
+      console (open <code>http://127.0.0.1:5001/</code>, open its own
+      DevTools, and try <code>fetch('http://127.0.0.1:5000/whoami')</code>
+      from there). Confirm the block is symmetric — it doesn't matter which
+      "direction" the fetch goes.</li>
+  <li><strong>Read one real CSP header.</strong> Visit any large real site (in
+      a normal tab, just browsing — no attack traffic involved), open Network,
+      and find its <code>Content-Security-Policy</code> response header. Paste
+      it somewhere and try to identify one directive by name (e.g.
+      <code>script-src</code>, <code>default-src</code>). You'll fully
+      understand these by Module 17 — for now, just notice they exist in
+      the wild.</li>
+</ol>
+
+<div class="note">
+<strong>Before Module 02:</strong> you should be able to state, from memory,
+what the three components of an origin are (scheme, host, port) and describe
+what you watched the browser refuse to do. Module 02 starts pulling apart
+<em>how</em> the browser turns HTML text into the DOM you were just
+inspecting — and why that process is forgiving of broken input in ways that
+become exploitable.
+</div>
+
+</body>
+</html>
