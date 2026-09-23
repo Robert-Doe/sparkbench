@@ -83,8 +83,8 @@ function render() {
       <h1>Sparkbench<br />Early XSS Lab Prototype</h1>
       <p class="tagline">
         The first-draft scratch build of the curriculum that became <strong>breachlab</strong>.
-        Only Module 01 (environment setup) was ever finished here — this demo is scoped to
-        match: one classic execution mechanism, running live in a sandbox that can't touch
+        Only Module 01 (environment setup) was ever finished here, so this demo is scoped
+        to match: one execution mechanism, running live in a sandbox that can't touch
         anything real.
       </p>
       <div class="safety-banner">
