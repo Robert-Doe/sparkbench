@@ -1,10 +1,10 @@
 import "./style.css";
 
 /**
- * Sparkbench — Early XSS Lab Prototype
+ * Sparkbench, Early XSS Lab Prototype
  *
  * sparkbench is the historical first draft of what became the 19-module
- * breachlab course — only Module 01 (environment setup / same-origin
+ * breachlab course, only Module 01 (environment setup / same-origin
  * policy) was ever built here before development continued in the
  * sibling repository, breachlab. This webapp mirrors that scope
  * honestly: it's a small, single-mechanism playground, not the full
@@ -14,7 +14,7 @@ import "./style.css";
  * reimplementation. There is no backend. The "vulnerable" sink below
  * runs inside a sandboxed <iframe sandbox="allow-scripts"> (deliberately
  * WITHOUT allow-same-origin) fed via `srcdoc`, so a payload can genuinely
- * execute while touching nothing real — no real cookies, no real
+ * execute while touching nothing real, no real cookies, no real
  * storage, no other visitor. Execution is only observable because the
  * sandboxed frame chooses to `postMessage` a report back to this page.
  */
@@ -57,9 +57,9 @@ const app = document.getElementById("app")!;
 
 function sinkCode(payload: string): string {
   return (
-    `# Illustrative vulnerable pattern — a typical "search results" page\n` +
+    `# Illustrative vulnerable pattern, a typical "search results" page\n` +
     `# reflecting user input straight into the HTML body, unescaped.\n` +
-    `# (sparkbench only ever built Module 01 / environment setup — this\n` +
+    `# (sparkbench only ever built Module 01 / environment setup, this\n` +
     `#  exact injection lab was never implemented here; the finished,\n` +
     `#  five-mechanism version lives in breachlab, Module 04 onward.)\n\n` +
     `q = request.args.get("q", "")\n` +
@@ -101,14 +101,14 @@ function render() {
       <div class="proto-banner">
         <strong>This is the early prototype, not the finished course.</strong>
         sparkbench stopped at Module 01 before development moved to the completed,
-        19-module sibling project — <a href="https://github.com/Robert-Doe/breachlab" target="_blank" rel="noopener noreferrer">breachlab</a>,
+        19-module sibling project, <a href="https://github.com/Robert-Doe/breachlab" target="_blank" rel="noopener noreferrer">breachlab</a>,
         which covers all five XSS execution mechanisms with a matching sandboxed playground.
       </div>
     </section>
 
     <main class="demo">
       <div class="card">
-        <span class="module-ref">Illustrative — classic tag/event-handler injection</span>
+        <span class="module-ref">Illustrative, classic tag/event-handler injection</span>
         <h2>Script-Tag &amp; Event-Handler Injection</h2>
         <p>
           When user input is dropped straight into an HTML page with no escaping, the
@@ -116,7 +116,7 @@ function render() {
           attribute." A classic payload like an <code style="font-family:var(--mono)">&lt;img&gt;</code>
           with a broken <code style="font-family:var(--mono)">src</code> and an
           <code style="font-family:var(--mono)">onerror</code> handler runs attacker
-          JavaScript the instant the browser tries (and fails) to load the image — no
+          JavaScript the instant the browser tries (and fails) to load the image, no
           <code style="font-family:var(--mono)">&lt;script&gt;</code> tag required.
         </p>
       </div>
@@ -141,7 +141,7 @@ function render() {
       <div class="card">
         <label class="harden-toggle" id="harden-toggle">
           <span class="switch ${hardened ? "on" : ""}"></span>
-          <span><strong>Harden this sink</strong> — HTML-entity-encode before insertion</span>
+          <span><strong>Harden this sink</strong>, HTML-entity-encode before insertion</span>
         </label>
 
         <div class="payload-row">
@@ -150,7 +150,7 @@ function render() {
           <button class="btn" id="run-btn">Run ▶</button>
         </div>
         <p class="hint">
-          Edit the payload freely — it only ever runs inside the sandboxed frame above.
+          Edit the payload freely, it only ever runs inside the sandboxed frame above.
           Toggle "harden this sink" and run the same payload again to see it neutralised.
         </p>
       </div>
@@ -162,7 +162,7 @@ function render() {
         sent to a server, persisted, or relayed to any other visitor.
       </p>
       <div class="footer-meta">
-        sparkbench — early prototype (Module 01 only) &middot;
+        sparkbench, early prototype (Module 01 only) &middot;
         full course: <a href="https://github.com/Robert-Doe/breachlab" target="_blank" rel="noopener noreferrer">breachlab</a>
       </div>
     </footer>
@@ -216,7 +216,7 @@ function runPayload() {
     const data = event.data;
     if (data && typeof data === "object" && data.__sparkbench && data.status === "fired") {
       window.removeEventListener("message", listener);
-      setStatus("fired", `Fired via ${data.via}("${data.detail}") — the payload executed inside the sandbox.`);
+      setStatus("fired", `Fired via ${data.via}("${data.detail}"), the payload executed inside the sandbox.`);
     }
   };
   window.addEventListener("message", listener);
@@ -230,8 +230,8 @@ function runPayload() {
       setStatus(
         "blocked",
         hardened
-          ? "Blocked — the hardening transform neutralised this payload."
-          : "No execution detected — this payload didn't trigger alert/confirm/prompt."
+          ? "Blocked, the hardening transform neutralised this payload."
+          : "No execution detected, this payload didn't trigger alert/confirm/prompt."
       );
     }
   }, 900);
